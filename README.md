@@ -14,7 +14,7 @@ Visit GitHub and fork the practicalli/spacemacs.d repository.  A fork is recomme
 
 In a terminal window, use git clone to copy your fork to your computer.
 
-```git clone git@github.com:practicalli/spacemacs.d.git ~/.spacemacs.d```
+```git clone git@github.com:alialmaktoum/spacemacs.d.git ~/.spacemacs.d```
 
 If you are happy to use my Spacemacs configuration as it is, then remove your `~/.spacemacs` file and start Emacs.
 
