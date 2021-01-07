@@ -32,7 +32,10 @@ This function should only modify configuration layer settings."
 
    ;; List of configuration layers to load.
    dotspacemacs-configuration-layers
-   '(
+   '(windows-scripts
+     typescript
+     javascript
+     spacemacs-modeline
      ;; ----------------------------------------------------------------
      ;; Example of useful layers you may want to use right away.
      ;; Uncomment some layer names and press `SPC f e R' (Vim style) or
@@ -52,7 +55,9 @@ This function should only modify configuration layer settings."
      (auto-completion :variables
                       auto-completion-enable-help-tooltip t
                       auto-completion-enable-snippets-in-popup t
-                      auto-completion-enable-sort-by-usage t)
+                      auto-completion-enable-sort-by-usage t
+                      auto-completion-idle-delay nil
+                      auto-completion-minimum-prefix-length 1)
      ;; To have auto-completion on as soon as you start typing
      ;; (auto-completion :variables auto-completion-idle-delay nil)
 
@@ -62,10 +67,12 @@ This function should only modify configuration layer settings."
               cider-overlays-use-font-lock t
               clojure-enable-linters 'clj-kondo
               cider-preferred-build-tool 'clojure-cli)
+     lsp
 
      ;; SPC a L displays key and command history in a separate buffer
      command-log
-
+     themes-megapack
+     tern
      ;; Nyan cat tells you where you are in your file
      ;; :variables
      ;; colors-enable-nyan-cat-progress-bar (display-graphic-p)
@@ -111,12 +118,11 @@ This function should only modify configuration layer settings."
            helm-follow-mode-persistent t)
 
      html
+     prettier
      ;; javascript
      json
 
      ;; Clojure specific configuration in dotspacemacs/user-config
-     ;; lsp
-
      markdown
 
      ;; Editing multiple lines of text concurrently
@@ -139,14 +145,17 @@ This function should only modify configuration layer settings."
           org-enable-github-support t
           org-enable-bootstrap-support t
           org-enable-reveal-js-support t
+          org-md-export-as-markdown t
+          org-md-export-to-markdown t
           org-want-todo-bindings t
           org-enable-org-journal-support t
-          org-journal-dir "~/projects/journal/"
+          org-journal-dir "~/Dropbox/org"
           org-journal-file-format "%Y-%m-%d"
           org-journal-date-prefix "#+TITLE: "
           org-journal-date-format "%A, %B %d %Y"
           org-journal-time-prefix "* "
           org-journal-time-format ""
+          org-projectile-file "~/Dropbox/org/project-todos.org"
           org-journal-carryover-items "TODO=\"TODO\"|TODO=\"DOING\"|TODO=\"BLOCKED\"|TODO=\"REVIEW\"")
 
 
@@ -188,7 +197,8 @@ This function should only modify configuration layer settings."
      (treemacs :variables
                treemacs-indentation 1
                treemacs-use-filewatch-mode t
-               treemacs-use-follow-mode t)
+               treemacs-use-follow-mode t
+               treemacs-position 'right)
 
      ;; Customise the Spacemacs themes
      ;; https://develop.spacemacs.org/layers/+themes/theming/README.html
@@ -360,10 +370,12 @@ It should only modify the values of Spacemacs settings."
    ;; Press `SPC T n' to cycle to the next theme in the list (works great
    ;; with 2 themes variants, one dark and one light)
 
-   dotspacemacs-themes '(doom-gruvbox-light
+   dotspacemacs-themes '(
+                         zenburn
+                         kaolin-valley-dark
+                         doom-gruvbox-light
                          doom-solarized-light
                          doom-sourcerer
-                         kaolin-valley-dark
                          doom-solarized-dark
                          spacemacs-light
                          spacemacs-dark)
@@ -375,7 +387,7 @@ It should only modify the values of Spacemacs settings."
    ;; refer to the DOCUMENTATION.org for more info on how to create your own
    ;; spaceline theme. Value can be a symbol or list with additional properties.
    ;; (default '(spacemacs :separator wave :separator-scale 1.5))
-   dotspacemacs-mode-line-theme '(doom)
+   dotspacemacs-mode-line-theme '(spacemacs)
 
    ;; If non-nil the cursor color matches the state color in GUI Emacs.
    ;; (default t)
@@ -721,7 +733,14 @@ before packages are loaded."
     (practicalli/setup-custom-doom-modeline))
   ;;
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
+  (with-eval-after-load 'org
+    (require 'org-projectile)
+    (setq org-projectile-projects-file
+          "~/Dropbox/org/project-todos.org")
+    (push (org-projectile-project-todo-entry) org-capture-templates)
+    (setq org-agenda-files (append org-agenda-files (org-projectile-todo-files)))
+    (global-set-key (kbd "C-c c") 'org-capture)
+    (global-set-key (kbd "C-c n p") 'org-projectile-project-todo-completing-read))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; User key bindings
@@ -754,8 +773,6 @@ before packages are loaded."
   (setq-default display-line-numbers-width nil)
   ;;
   ;;
-  ;; replace / search with helm-swoop in Evil normal state
-  (evil-global-set-key 'normal "/" 'helm-swoop)
   ;;
   ;;
   ;; Do not highlight trailing whitespace
@@ -846,7 +863,7 @@ before packages are loaded."
   ;;
   ;; Define the location of the file to hold tasks
   (with-eval-after-load 'org
-    (setq org-default-notes-file "~/Dropbox/todo-list.org"))
+    (setq org-default-notes-file "~/Dropbox/org/todo-list.org"))
   ;;
   ;; Define a kanban style set of stages for todo tasks
   (with-eval-after-load 'org
@@ -971,6 +988,8 @@ before packages are loaded."
   ;;
   ;;
   ;;
+  (add-hook 'js2-mode-hook 'prettier-js-mode)
+  (add-hook 'web-mode-hook 'prettier-js-mode)
   ;; LSP server for Clojure with clj-kondo
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; An alternative approach to the Clojure layer variable clojure-enable-linters 'clj-kondo
@@ -1102,7 +1121,8 @@ before packages are loaded."
     "Indent settings for languages in Web mode, markup=html, css=css, code=javascript/php/etc."
     (setq web-mode-markup-indent-offset 2)
     (setq web-mode-css-indent-offset  2)
-    (setq web-mode-code-indent-offset 2))
+    (setq web-mode-code-indent-offset 2)
+    (setq web-mode-enable-current-element-highlight t))
   ;;
   (add-hook 'web-mode-hook  'web-mode-indent-2-hook)
   ;;
@@ -1238,7 +1258,7 @@ before packages are loaded."
   ;; Shell configuration
   ;;
   ;; Use zsh for default multi-term shell
-  ;; (setq multi-term-program "/usr/bin/zsh")
+   (setq multi-term-program "/usr/bin/zsh")
   ;;
   ;; End of Shell configuration
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1546,12 +1566,12 @@ before packages are loaded."
   ;; Neotree configuration
   ;;
   ;; Display neotree on the right rather than left (default)
-  ;; (setq neo-window-position 'right)
+   (setq neo-window-position 'right)
   ;;
   ;; End of Neotree configuration
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
+   (global-set-key (kbd "C-SPC") 'company-complete)
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; old-school emacs style keybindings that i am replacing with nicer spacemacs alternatives
   ;;
@@ -1583,3 +1603,23 @@ before packages are loaded."
 
 ;; Do not write anything past this comment. This is where Emacs will
 ;; auto-generate custom variable definitions.
+(defun dotspacemacs/emacs-custom-settings ()
+  "Emacs custom settings.
+This is an auto-generated function, do not modify its content directly, use
+Emacs customize menu instead.
+This function is called at the very end of Spacemacs initialization."
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(evil-want-Y-yank-to-eol nil)
+ '(package-selected-packages
+   '(lsp-ui lsp-treemacs cfrs posframe lsp-origami origami helm-lsp lsp-mode powershell typescript-mode tern nodejs-repl js2-mode js-doc import-js grizzl helm-gtags ggtags dash-functional ivy add-node-modules-path yasnippet-snippets yaml-mode xterm-color ws-butler writeroom-mode winum which-key web-mode web-beautify vterm volatile-highlights vi-tilde-fringe uuidgen use-package unicode-fonts undo-tree treemacs-projectile treemacs-persp treemacs-magit treemacs-icons-dired treemacs-evil toc-org terminal-here tagedit symon symbol-overlay string-inflection spaceline-all-the-icons smeargle slim-mode shell-pop scss-mode sass-mode restart-emacs ranger rainbow-mode rainbow-identifiers rainbow-delimiters pug-mode prettier-js popwin pcre2el password-generator paradox ox-twbs ox-gfm overseer orgit org-superstar org-rich-yank org-re-reveal org-projectile org-present org-pomodoro org-mime org-journal org-download org-cliplink org-brain open-junk-file nameless multi-term move-text mmm-mode markdown-toc magit-svn magit-section magit-gitflow macrostep lorem-ipsum link-hint ligature kaolin-themes json-navigator json-mode indent-guide impatient-mode hybrid-mode hungry-delete hl-todo highlight-parentheses highlight-numbers highlight-indentation helm-xref helm-themes helm-swoop helm-purpose helm-projectile helm-org-rifle helm-org helm-mode-manager helm-make helm-ls-git helm-gitignore helm-git-grep helm-flx helm-descbinds helm-css-scss helm-company helm-cider helm-c-yasnippet helm-ag grip-mode graphviz-dot-mode google-translate golden-ratio gnuplot gitignore-templates github-search github-clone gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link gist gh-md fuzzy forge font-lock+ flyspell-correct-helm flycheck-pos-tip flycheck-package flycheck-elsa flycheck-clj-kondo flx-ido fancy-battery eyebrowse expand-region evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-textobj-line evil-surround evil-org evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-magit evil-lisp-state evil-lion evil-indent-plus evil-iedit-state evil-goggles evil-exchange evil-escape evil-ediff evil-cleverparens evil-args evil-anzu eshell-z eshell-prompt-extras esh-help emr emojify emoji-cheat-sheet-plus emmet-mode elisp-slime-nav editorconfig dumb-jump dotenv-mode doom-themes doom-modeline diminish diff-hl devdocs define-word csv-mode company-web company-statistics company-quickhelp company-emoji command-log-mode column-enforce-mode color-identifiers-mode clojure-snippets clean-aindent-mode cider-eval-sexp-fu centered-cursor-mode browse-at-remote auto-yasnippet auto-highlight-symbol auto-dictionary auto-compile aggressive-indent adoc-mode ace-link ace-jump-helm-line ac-ispell)))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
+)
