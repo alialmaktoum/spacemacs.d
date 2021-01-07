@@ -32,10 +32,10 @@ This function should only modify configuration layer settings."
 
    ;; List of configuration layers to load.
    dotspacemacs-configuration-layers
-   '(windows-scripts
-     typescript
-     javascript
+   '(
      spacemacs-modeline
+     ;; ALI CUSTOM
+     themes-megapack
      ;; ----------------------------------------------------------------
      ;; Example of useful layers you may want to use right away.
      ;; Uncomment some layer names and press `SPC f e R' (Vim style) or
@@ -49,8 +49,9 @@ This function should only modify configuration layer settings."
      ;; Useful for docs.cider.mx editing
      asciidoc
 
+
      ;; Add tool tips to show doc string of functions
-     ;; Show snippets in the autocompletion popup
+     ;; Show snippets in the auto-completion popup
      ;; Show suggestions by most commonly used
      (auto-completion :variables
                       auto-completion-enable-help-tooltip t
@@ -58,11 +59,14 @@ This function should only modify configuration layer settings."
                       auto-completion-enable-sort-by-usage t
                       auto-completion-idle-delay nil
                       auto-completion-minimum-prefix-length 1)
+
      ;; To have auto-completion on as soon as you start typing
      ;; (auto-completion :variables auto-completion-idle-delay nil)
 
      ;; https://develop.spacemacs.org/layers/+lang/clojure/README.html
      (clojure :variables
+              clojure-backend 'cider
+              clojure-enable-linters 'clj-kondo
               clojure-toplevel-inside-comment-form t
               cider-overlays-use-font-lock t
               clojure-enable-linters 'clj-kondo
@@ -131,7 +135,7 @@ This function should only modify configuration layer settings."
 
      ;; Configuration: https://github.com/seagle0128/doom-modeline#customize
      (spacemacs-modeline :variables
-                         doom-modeline-height 12
+                         doom-modeline-height 14
                          doom-modeline-major-mode-color-icon t
                          doom-modeline-buffer-file-name-style 'relative-to-project
                          doom-modeline-display-default-persp-name t
@@ -139,6 +143,7 @@ This function should only modify configuration layer settings."
                          doom-modeline-modal-icon nil)
 
      ;; buffer-position word-count parrot selection-info
+
 
      ;; Spacemacs Org mode
      (org :variables
@@ -223,12 +228,13 @@ This function should only modify configuration layer settings."
      ) ;; End of dotspacemacs-configuration-layers
 
 
-   ;; List of additional packages that will be installed without being
-   ;; wrapped in a layer. If you need some configuration for these
-   ;; packages, then consider creating a layer. You can also put the
-   ;; configuration in `dotspacemacs/user-config'.
-   ;; To use a local version of a package, use the `:location' property:
-   ;; '(your-package :location "~/path/to/your-package/")
+   ;; List of additional packages that will be installed without being wrapped
+   ;; in a layer (generally the packages are installed only and should still be
+   ;; loaded using load/require/use-package in the user-config section below in
+   ;; this file). If you need some configuration for these packages, then
+   ;; consider creating a layer. You can also put the configuration in
+   ;; `dotspacemacs/user-config'. To use a local version of a package, use the
+   ;; `:location' property: '(your-package :location "~/path/to/your-package/")
    ;; Also include the dependencies as they will not be resolved automatically.
    dotspacemacs-additional-packages '()
 
@@ -271,7 +277,7 @@ It should only modify the values of Spacemacs settings."
    ;; To load it when starting Emacs add the parameter `--dump-file'
    ;; when invoking Emacs 27.1 executable on the command line, for instance:
    ;;   ./emacs --dump-file=$HOME/.emacs.d/.cache/dumps/spacemacs-27.1.pdmp
-   ;; (default spacemacs-27.1.pdmp)
+   ;; (default (format "spacemacs-%s.pdmp" emacs-version))
    dotspacemacs-emacs-dumper-dump-file (format "spacemacs-%s.pdmp" emacs-version)
 
    ;; If non-nil ELPA repositories are contacted via HTTPS whenever it's
@@ -301,7 +307,9 @@ It should only modify the values of Spacemacs settings."
 
    ;; If non-nil then Spacelpa repository is the primary source to install
    ;; a locked version of packages. If nil then Spacemacs will install the
-   ;; latest version of packages from MELPA. (default nil)
+   ;; latest version of packages from MELPA. Spacelpa is currently in
+   ;; experimental state please use only for testing purposes.
+   ;; (default nil)
    dotspacemacs-use-spacelpa nil
 
    ;; If non-nil then verify the signature for downloaded Spacelpa archives.
@@ -362,17 +370,23 @@ It should only modify the values of Spacemacs settings."
    ;; Default major mode of the scratch buffer (default `text-mode')
    dotspacemacs-scratch-mode 'org-mode
 
+   ;; If non-nil, *scratch* buffer will be persistent. Things you write down in
+   ;; *scratch* buffer will be saved and restored automatically.
+   dotspacemacs-scratch-buffer-persistent t
+
+   ;; If non-nil, `kill-buffer' on *scratch* buffer
+   ;; will bury it instead of killing.
+   dotspacemacs-scratch-buffer-unkillable t
+
    ;; Initial message in the scratch buffer, such as "Welcome to Spacemacs!"
    ;; (default nil)
-   dotspacemacs-initial-scratch-message "Scratch Buffer in Org-mode"
+   dotspacemacs-initial-scratch-message nil
 
    ;; List of themes, the first of the list is loaded when spacemacs starts.
    ;; Press `SPC T n' to cycle to the next theme in the list (works great
    ;; with 2 themes variants, one dark and one light)
 
-   dotspacemacs-themes '(
-                         zenburn
-                         kaolin-valley-dark
+   dotspacemacs-themes '(zenburn
                          doom-gruvbox-light
                          doom-solarized-light
                          doom-sourcerer
@@ -556,9 +570,9 @@ It should only modify the values of Spacemacs settings."
                                :size-limit-kb 1000)
 
 
-   ;; Code folding method. Possible values are `evil' and `origami'.
+   ;; Code folding method. Possible values are `evil', `origami' and `vimish'.
    ;; (default 'evil)
-   dotspacemacs-folding-method 'evil
+   dotspacemacs-folding-method 'vimish
 
    ;; If non-nil `smartparens-strict-mode' will be enabled in programming modes.
    ;; (default nil)
@@ -632,8 +646,8 @@ It should only modify the values of Spacemacs settings."
    dotspacemacs-use-clean-aindent-mode t
 
    ;; If non-nil shift your number row to match the entered keyboard layout
-   ;; (only in insert mode). Currently the keyboard layouts
-   ;; (qwerty-us qwertz-de) are supported.
+   ;; (only in insert state). Currently supported keyboard layouts are:
+   ;; `qwerty-us', `qwertz-de' and `querty-ca-fr'.
    ;; New layouts can be added in `spacemacs-editing' layer.
    ;; (default nil)
    dotspacemacs-swap-number-row nil
@@ -696,6 +710,14 @@ configuration.
 Put your configuration code here, except for variables that should be set
 before packages are loaded."
 
+
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; Keeping Helm history clean
+  (setq history-delete-duplicates t)
+  (setq extended-command-history
+        (delq nil (delete-dups extended-command-history)))
+
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Emacs text rendering optimizations
